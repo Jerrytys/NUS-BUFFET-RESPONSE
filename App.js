@@ -1,72 +1,37 @@
-import { StatusBar } from 'expo-status-bar';
-import { Pressable, TouchableOpacity, StyleSheet, Text, View, Image, Button } from 'react-native';
+import * as React from 'react';
+import {createStaticNavigation, NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+
+import Main from './Main.js';
+import LoginScreen from './LoginScreen.js';
+import SignUpScreen from './SignUpScreen.js';
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Image style={styles.logo}source={require('./assets/nuslogo.png')}/>   
-      
-      <Text style={styles.title}>NUS FOOD RUNNER</Text>
+    return (
+        <NavigationContainer>
+            <Stack.Navigator
+              screenOptions={{
+                headerShown: false
+              }}>
 
-      <TouchableOpacity style={styles.loginButton}>
-        <Text style={styles.loginText}>Login</Text>
-      </TouchableOpacity>
+                <Stack.Screen
+                    name="Main"
+                    component={Main}
+                />
 
-      <View style={styles.login}>
-        <Text style={styles.signUpText}>Don't have an account?</Text>
-        <Button title='Sign Up'/>
-      </View>
+                <Stack.Screen
+                    name="LoginScreen"
+                    component={LoginScreen}
+                />
 
-      <StatusBar style="auto" />
-    </View>
-  );
+                <Stack.Screen
+                    name="SignUpScreen"
+                    component={SignUpScreen}
+                />
+                
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFF8AC',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  title: {
-    fontSize: 28,
-    fontWeight: 700,
-    marginBottom: 20
-  },
-  
-  logo: {
-    height: 240,
-    width: 240,
-    marginBottom: 30,
-  },
-  
-  login: {
-    flexDirection:'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  loginButton: {
-    backgroundColor: '#4781FF',
-    borderRadius: 25,
-    margin: 20,
-  },
-  loginText: {
-    paddingLeft: 120,
-    paddingRight: 120,
-    paddingTop: 5,
-    paddingBottom: 5,
-    textAlign: 'center',
-    fontSize: 20
-  },
-
-  SignUpButton:{
-    
-  },
-
-  signUpText: {
-    fontSize: 16
-  }
-});
