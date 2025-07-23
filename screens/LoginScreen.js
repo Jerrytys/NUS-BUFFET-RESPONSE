@@ -1,13 +1,26 @@
 
 import { StatusBar } from 'expo-status-bar';
-import { Pressable, TouchableOpacity, StyleSheet, Text, View, Image, Button } from 'react-native';
+import { Pressable, TouchableOpacity, StyleSheet, Text, TextInput, View, Image, TouchableWithoutFeedback, Keyboard, Button } from 'react-native';
 
-export default function SignUpScreen() {
+export default function LoginScreen({navigation}) {
   return (
     <View style={styles.container}>
-      <Image style={styles.logo}source={require('./assets/nuslogo.png')}/>   
+        
+      <Image style={styles.logo}source={require('../assets/nuslogo.png')}/>   
+
+      <Text style={styles.title}>LOGIN PAGE</Text>
       
-      <Text style={styles.title}>Sign Up PAGE</Text>
+      <View style={styles.inputContainer}>
+        <TextInput 
+          placeholder = "Email"
+          style = {styles.input} 
+        />
+        
+        <TextInput 
+          placeholder = "Password"
+          style = {styles.input} 
+        />
+      </View>
 
       <TouchableOpacity style={styles.loginButton}>
         <Text style={styles.loginText}>Login</Text>
@@ -20,6 +33,8 @@ export default function SignUpScreen() {
           styles.SignUpButton,
           pressed && styles.buttonPressed
          ]}
+
+         onPress={() => navigation.navigate('SignUpScreen')}
          >
           {({ pressed }) => (
             <Text style = {[styles.SignUpButton, pressed && styles.textPressed]}>
@@ -41,6 +56,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF8AC',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  input: {
+    width: 250,
+    borderColor: "black",
+    borderWidth: 1,
+    borderRadius: 10,
+    marginBottom: 5,
+    
   },
 
   title: {
@@ -86,4 +109,16 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 
+  input: {
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: 'black',
+    borderRadius: 10,
+  },
+
+  inputContainer: {
+    gap: 10,
+    width: 270,
+  }
 });

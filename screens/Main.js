@@ -5,7 +5,7 @@ import { Pressable, TouchableOpacity, StyleSheet, Text, View, Image, Button } fr
 export default function Main({navigation}) {
   return (
     <View style={styles.container}>
-      <Image style={styles.logo}source={require('./assets/nuslogo.png')}/>   
+      <Image style={styles.logo}source={require('../assets/nuslogo.png')}/>   
       
       <Text style={styles.title}>NUS FOOD RUNNER</Text>
 
