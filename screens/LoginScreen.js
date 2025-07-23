@@ -1,29 +1,80 @@
 
 import { StatusBar } from 'expo-status-bar';
-import { Pressable, TouchableOpacity, StyleSheet, Text, TextInput, View, Image, TouchableWithoutFeedback, Keyboard, Button } from 'react-native';
+import { Pressable, TouchableOpacity, StyleSheet, Text, TextInput, View, Image, Alert} from 'react-native';
+import { getAuth , signInWithEmailAndPassword } from 'firebase/auth';
+import React, { useState } from 'react';
+import app from '../firebaseConfig.js';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-export default function LoginScreen({navigation}) {
+
+export default function LoginScreen({navigation, onLoginSuccess}) {
+
+  function signIn(email, password) {
+    const auth = getAuth(app);
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        Alert.alert("Signed in Successful");
+        onLoginSuccess() // TO BE  CHANGED
+      })
+      .catch((error) => {
+        Alert.alert("Wrong Email or Password");
+      });
+  }
+  
+  const [email, setEmail] =  useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);        
+
+  // Function to toggle the password visibility state
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+  
+  
   return (
     <View style={styles.container}>
         
       <Image style={styles.logo}source={require('../assets/nuslogo.png')}/>   
 
-      <Text style={styles.title}>LOGIN PAGE</Text>
+      <Text style={styles.title}>LOGIN</Text>
       
       <View style={styles.inputContainer}>
-        <TextInput 
-          placeholder = "Email"
-          style = {styles.input} 
-        />
         
-        <TextInput 
-          placeholder = "Password"
-          style = {styles.input} 
-        />
+        <View style={styles.inputBox}>
+          <TextInput 
+            placeholder = "Email"
+            style = {styles.input} 
+            value={email}
+            onChangeText={text => setEmail(text)}
+          />
+        </View>
+
+        <View style={styles.inputBox}>
+          <TextInput 
+            placeholder = "Password"
+            style = {styles.input} 
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={text => setPassword(text)}
+          />
+          <MaterialCommunityIcons
+            name={showPassword ? 'eye-off' : 'eye'}
+            size={24}
+            color="#aaa"
+            style={styles.icon}
+            onPress={toggleShowPassword}
+          />         
+        </View>
       </View>
 
-      <TouchableOpacity style={styles.loginButton}>
+      <TouchableOpacity 
+        style={styles.loginButton} 
+        onPress ={() => signIn(email, password)}
+      >
+
         <Text style={styles.loginText}>Login</Text>
+
       </TouchableOpacity>
 
       <View style={styles.login}>
@@ -112,13 +163,21 @@ const styles = StyleSheet.create({
   input: {
     paddingVertical: 8,
     paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: 'black',
-    borderRadius: 10,
+    flex: 1
   },
 
   inputContainer: {
     gap: 10,
     width: 270,
-  }
+  },
+
+  inputBox: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderColor: 'black',
+  borderWidth: 1.2,
+  borderRadius:  10,
+  paddingRight: 8
+}
 });
