@@ -6,7 +6,8 @@ import { useState } from 'react';
 import Main from './screens/Main.js';
 import LoginScreen from './screens/LoginScreen.js';
 import SignUpScreen from './screens/SignUpScreen.js';
-import Home from './screens/Home.js';
+
+import MainContainer from './screens/MainContainer.js';
 
 const loginStack = createNativeStackNavigator();
 const mainStack = createNativeStackNavigator();
@@ -34,29 +35,10 @@ function LoginStackScreen({onLoginSuccess}) {
                 component={SignUpScreen}
             />
 
-            <loginStack.Screen
-                name = "Home"
-                component = {Home}
-            />
-            
         </loginStack.Navigator>
     )
 }
-function MainStackScreen(){
-    return(
-        <mainStack.Navigator
-              screenOptions={{
-                headerShown: false
-              }}>
 
-                <mainStack.Screen
-                    name = "Home"
-                    component = {Home}
-                />
-                
-        </mainStack.Navigator>
-    )
-}
 
 export default function App() {
 
@@ -64,7 +46,7 @@ export default function App() {
     
     return (
         <NavigationContainer>
-            {isLoggedIn ? <MainStackScreen/> : <LoginStackScreen onLoginSuccess={() => setLogin(true)} />}
+            {isLoggedIn ? <MainContainer/> : <LoginStackScreen onLoginSuccess={() => setLogin(true)} />}
         </NavigationContainer>
     );
 }
