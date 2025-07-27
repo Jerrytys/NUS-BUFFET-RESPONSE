@@ -46,7 +46,7 @@ export default function App() {
     
     return (
         <NavigationContainer>
-            {isLoggedIn ? <MainContainer/> : <LoginStackScreen onLoginSuccess={() => setLogin(true)} />}
+            {isLoggedIn ? <MainContainer onLogout={() => setLogin(false)}/> : <LoginStackScreen onLoginSuccess={() => setLogin(true)} />}
         </NavigationContainer>
     );
 }

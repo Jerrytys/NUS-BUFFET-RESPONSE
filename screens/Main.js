@@ -20,13 +20,15 @@ export default function Main({navigation}) {
           styles.SignUpButton,
           pressed && styles.buttonPressed
          ]}
-         >
+
+         onPress={() => navigation.navigate('SignUpScreen')}
+        >
           {({ pressed }) => (
             <Text style = {[styles.SignUpButton, pressed && styles.textPressed]}>
               Sign Up
             </Text>
           )}
-         </Pressable>
+        </Pressable>
 
       </View>
 

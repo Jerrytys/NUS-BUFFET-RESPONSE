@@ -1,16 +1,14 @@
-
 import { StatusBar } from 'expo-status-bar';
 import { Alert, TextInput, Pressable, StyleSheet, Text, View, Image } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { app } from '../firebaseConfig.js'
+import { auth } from '../firebaseConfig.js'
 import React, { useState } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function SignUpScreen({navigation}) {
 
   function signUp(email, password) {
-    const auth = getAuth(app);
-    
+
     createUserWithEmailAndPassword(
         auth,
         email ,

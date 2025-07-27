@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { Pressable, Text, View, StyleSheet } from 'react-native';   
+import { Pressable, Text, View, StyleSheet, Alert } from 'react-native';   
 
 
 export default function SearchScreen() {
@@ -17,7 +17,7 @@ export default function SearchScreen() {
       >
         <Text>Search Screen</Text>
       </Pressable>
-      <Text style={styles.title}>Home</Text>
+      <Text style={styles.title}>Search</Text>
 
       <StatusBar style="auto" />
     </View>
