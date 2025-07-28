@@ -8,7 +8,10 @@ const CardComponent = ({ description, location, clearBefore, picture }) => {
       <Text style={styles.clearBefore}>ClearBy: {clearBefore}</Text>
       <View style={styles.separator}/>
       <View style ={styles.row}>
-        <Image style ={styles.picture}>{picture}</Image>
+        <Image
+            style={styles.picture}
+            source={{ uri: picture }} 
+        />
         <View style ={styles.descriptionComponent}>
             <Text style={styles.header}>Description:</Text>
             <Text style={styles.description}>{description}</Text>

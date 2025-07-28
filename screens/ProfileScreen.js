@@ -12,6 +12,7 @@ export default function ProfileScreen({ user, onLogout }) {
             await AsyncStorage.multiRemove(keys); // Clear all stored data
 
             // Reset navigation stack to the login screen
+            
             //onLogout?.() // ?. is optional chaining operator, does not crash if does not exist
             Alert.alert('Logged out')
         } catch (error) {

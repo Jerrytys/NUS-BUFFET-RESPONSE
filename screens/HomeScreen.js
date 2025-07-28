@@ -1,9 +1,11 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect  } from 'react'; 
-import { FlatList, Text, View, StyleSheet, Alert, Pressable, Modal, TextInput } from 'react-native';   
+import { Platform, FlatList, Text, View, StyleSheet, Alert, Pressable, Modal, TextInput, Image } from 'react-native';   
 import { Dropdown } from 'react-native-element-dropdown';
 import CardComponent from './Components/CardComponent';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
 
 const data = [
   {label:'School Of Computing', value: '1'},
@@ -21,17 +23,40 @@ export default function HomeScreen() {
   const [location, setLocation] =  useState('');
   const [description, setDescription] = useState('');
   const [clearBefore, setClearBefore] = useState('');
+  const [date, setDate] = useState(new Date());
+  const [hasTime, setHasTime] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
   const [dataList, setDataList] = useState([]);
+  const [imageUri, setImageUri] = useState(null);
+
+  const openCamera = async() => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if(status !== 'granted'){
+      Alert.alert('Permission denied', 'Camera permission is required');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      console.log("Captured Image URI:", uri);
+      setImageUri(uri); // Optional: store or display the photo
+    }
+  };
 
   const renderItem = ({item}) => (
-    <CardComponent location={item.location}  clearBefore={item.clearBefore} description={item.description} />
+    <CardComponent location={item.location}  clearBefore={item.clearBefore} description={item.description} picture = {item.picture}/>
   )
 
   const addItem = async () => {
     const newItem = {
       location: location,
       clearBefore: clearBefore,
-      description: description
+      description: description,
+      picture: imageUri || null,
     };
 
     const updatedList  = [...dataList, newItem];
@@ -42,12 +67,17 @@ export default function HomeScreen() {
     } catch (e) {
       console.error("Failed to save data", e);
     }
-    
-    setLocation("");  
-    setClearBefore("");
-    setDescription("");
+
+    resetVariable();
   }
 
+  const resetVariable = () => {
+    setLocation("");  
+    setClearBefore(new Date());
+    setHasTime(false);
+    setDescription("");
+    setImageUri(null);
+  }
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -71,6 +101,30 @@ export default function HomeScreen() {
     } catch (e) {
       console.error("Failed to clear items", e);
     }
+  };
+
+  const toggleDatePicker = () => {
+    setShowPicker(!showPicker);
+  };
+
+  const onChangeTime = ({type},  selectedTime) => {
+    if  (type == "set") {
+      const currentTime = selectedTime;
+      setDate(currentTime);
+      if (Platform.OS === "android") {
+        setClearBefore(currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+        toggleDatePicker();
+        setHasTime(true);
+      }
+    } else {
+      toggleDatePicker();
+    }
+  };
+
+  const confirmIOSDate = () => {
+    setHasTime(true)
+    setClearBefore(date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    toggleDatePicker();
   }
 
   return (
@@ -88,6 +142,7 @@ export default function HomeScreen() {
           onChange={item => setValue(item.value)}
         />
       </View>
+      
 
       <View style={styles.content}>
 
@@ -104,31 +159,102 @@ export default function HomeScreen() {
             <View style={styles.modalView}>
               <TextInput 
                 placeholder = "Location"
+                placeholderTextColor={'#808080'}
                 style = {styles.input} 
                 value={location}
                 onChangeText={text => setLocation(text)}
               />
-              <TextInput 
-                placeholder = "ClearBefore (e.g. 10.30pm,10/2/24)"
-                style = {styles.input} 
-                value={clearBefore}
-                onChangeText={text => setClearBefore(text)}
-              />
+              <Pressable
+                onPress={toggleDatePicker}
+              >
+                <TextInput 
+                  placeholder = "ClearBefore (e.g. 10.30pm,10/2/24)"
+                  placeholderTextColor={'#808080'}
+                  style = {styles.input} 
+                  value={hasTime ? clearBefore
+                                : ''
+                        }
+                  onChangeText={text => setClearBefore(text)}
+                  editable={false}
+                  onPressIn={toggleDatePicker}
+                />
+              </Pressable>
+
+              {showPicker && (
+                <DateTimePicker
+                  mode="time"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  value={date}
+                  onChange={onChangeTime}
+                />
+              )}
+
+              {showPicker &&  Platform.OS === "ios" && (
+                <View
+                  style={{ flexDirection: "row",
+                    justifyContent: "space-around"
+                  }}
+                >
+
+                  <Pressable style={[
+                    styles.button,
+                    { backgroundColor: "#11182711"}
+                  ]}
+                    onPress={toggleDatePicker}
+                  >
+                    <Text style={styles.textStyle}>Cancel</Text>
+                  </Pressable>
+
+                  <Pressable style={[
+                    styles.button,
+                    { backgroundColor: "#11182711"}
+                  ]}
+                    onPress={confirmIOSDate}
+                  >
+
+                    <Text style={styles.textStyle}>Confirm</Text>
+                  </Pressable>
+                </View>
+              )
+              }
+
               <TextInput 
                 multiline
                 numberOfLines={5}
                 placeholder = "Description (6 lines max)"
+                placeholderTextColor={'#808080'}
                 style = {styles.inputDescription} 
                 value={description}
                 onChangeText={text => setDescription(text)}
               />
-              <Pressable
-                style={[styles.button, styles.buttonClose]}
-                onPress={() => {
-                  setModalVisible(!modalVisible);
-                  addItem();}}>
-                <Text style={styles.textStyle}>Confirm</Text>
+              <Pressable style={[styles.button, styles.buttonClose]} onPress={openCamera}>
+                <Text>Take Photo</Text>
               </Pressable>
+              {imageUri && (
+                <Image 
+                  source={{ uri: imageUri }} 
+                  style={{ width: 200, height: 200, marginVertical: 10, borderRadius: 10 }} 
+                />
+              )}
+              <View style={styles.horizontalButtons}>
+                <Pressable
+                  style={[styles.button, styles.buttonClose]}
+                  onPress={() => {
+                    setModalVisible(!modalVisible);
+                    resetVariable();
+                  }}>
+                  <Text style={styles.textStyle}>Cancel</Text>
+                </Pressable>
+
+                <Pressable
+                  style={[styles.button, styles.buttonClose]}
+                  onPress={() => {
+                    setModalVisible(!modalVisible);
+                    addItem();}}>
+                  <Text style={styles.textStyle}>Confirm</Text>
+                </Pressable>
+              </View>
+
             </View>
           </View>
         </Modal>
@@ -285,4 +411,10 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
   },
+
+  horizontalButtons: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  
 });
