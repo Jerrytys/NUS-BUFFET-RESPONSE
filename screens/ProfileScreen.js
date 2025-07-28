@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 
 
-export default function ProfileScreen({ onLogout }) {
+export default function ProfileScreen({ user, onLogout }) {
 
     const handleLogout = async () => {
         try {
@@ -18,23 +18,24 @@ export default function ProfileScreen({ onLogout }) {
             console.error('Logout error:', error);
         }
     };
-    
+
     return (
         <View style={styles.container}>
-        <Pressable
-            style = {({ pressed } ) =>[
-            styles.logoutButton,
-            pressed && styles.logoutButtonPressed
-            ]}
+          <Text>User: {user.email} </Text>
+          <Pressable
+              style = {({ pressed } ) =>[
+              styles.logoutButton,
+              pressed && styles.logoutButtonPressed
+              ]}
 
-            onPress ={() =>{
-                handleLogout();
-            }}
-        >
-            <Text>Logout</Text>
-        </Pressable>
+              onPress ={() =>{
+                  handleLogout();
+              }}
+          >
+              <Text>Logout</Text>
+          </Pressable>
 
-        <StatusBar style="auto" />
+          <StatusBar style="auto" />
         </View>
     );
 }

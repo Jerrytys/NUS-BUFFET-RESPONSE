@@ -1,9 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react'; 
+import React, { useState, useEffect  } from 'react'; 
 import { FlatList, Text, View, StyleSheet, Alert, Pressable, Modal, TextInput } from 'react-native';   
 import { Dropdown } from 'react-native-element-dropdown';
 import CardComponent from './Components/CardComponent';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const data = [
   {label:'School Of Computing', value: '1'},
@@ -21,17 +21,61 @@ export default function HomeScreen() {
   const [location, setLocation] =  useState('');
   const [description, setDescription] = useState('');
   const [clearBefore, setClearBefore] = useState('');
-
-  const list = [
-    {location: "SOC", clearBefore:"27/7/2025 2:00pm"}
-  ]
+  const [dataList, setDataList] = useState([]);
 
   const renderItem = ({item}) => (
-    <CardComponent location={item.location}  clearBefore={item.clearBefore} />
+    <CardComponent location={item.location}  clearBefore={item.clearBefore} description={item.description} />
   )
+
+  const addItem = async () => {
+    const newItem = {
+      location: location,
+      clearBefore: clearBefore,
+      description: description
+    };
+
+    const updatedList  = [...dataList, newItem];
+    setDataList(updatedList);
+    // await can only be async function or top level of modules
+    try {
+      await AsyncStorage.setItem('@dataList', JSON.stringify(updatedList));
+    } catch (e) {
+      console.error("Failed to save data", e);
+    }
+    
+    setLocation("");  
+    setClearBefore("");
+    setDescription("");
+  }
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem('@dataList');
+        if (storedData !== null) {
+          setDataList(JSON.parse(storedData));
+        }
+      } catch (e) {
+        console.error("Failed to load data", e);
+      }
+    };
+
+    loadData();
+  }, []);
+  
+  const clearAll = async () => {
+    try {
+      await AsyncStorage.removeItem('@dataList'); // Clear from storage
+      setDataList([]); // Clear from in-memory state
+      console.log("Cleared all items");
+    } catch (e) {
+      console.error("Failed to clear items", e);
+    }
+  }
 
   return (
     <View style={styles.container}>
+
       <View style={{marginTop: 20}}>
         <Dropdown
           style ={styles.dropDown}
@@ -55,6 +99,7 @@ export default function HomeScreen() {
             Alert.alert('Modal has been closed.');
             setModalVisible(!modalVisible);
           }}>
+            
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
               <TextInput 
@@ -63,25 +108,26 @@ export default function HomeScreen() {
                 value={location}
                 onChangeText={text => setLocation(text)}
               />
-              
               <TextInput 
-                placeholder = "Description"
-                style = {styles.input} 
-                value={description}
-                onChangeText={text => setDescription(text)}
-              />
-
-              <TextInput 
-                placeholder = "ClearBefore"
+                placeholder = "ClearBefore (e.g. 10.30pm,10/2/24)"
                 style = {styles.input} 
                 value={clearBefore}
                 onChangeText={text => setClearBefore(text)}
               />
-
+              <TextInput 
+                multiline
+                numberOfLines={5}
+                placeholder = "Description (6 lines max)"
+                style = {styles.inputDescription} 
+                value={description}
+                onChangeText={text => setDescription(text)}
+              />
               <Pressable
                 style={[styles.button, styles.buttonClose]}
-                onPress={() => setModalVisible(!modalVisible)}>
-                <Text style={styles.textStyle}>Hide Modal</Text>
+                onPress={() => {
+                  setModalVisible(!modalVisible);
+                  addItem();}}>
+                <Text style={styles.textStyle}>Confirm</Text>
               </Pressable>
             </View>
           </View>
@@ -92,9 +138,16 @@ export default function HomeScreen() {
           onPress={() => setModalVisible(true)}>
           <Text>Add Listing</Text>
         </Pressable>
+        
+        
+        <Pressable 
+          style = { styles.AddButton }
+          onPress={() => clearAll()}>
+          <Text>clear all</Text>
+        </Pressable>
 
         <FlatList
-          data={list}
+          data={dataList}
           renderItem={renderItem}
         />
         
@@ -155,7 +208,7 @@ const styles = StyleSheet.create({
   AddButton:{
     fontSize: 30,
     marginVertical: 4,
-    backgroundColor:'#f5ceebff',
+    backgroundColor:'#cfe7f4ff',
     padding: 10,
     borderRadius: 10,
     borderWidth: 1,
@@ -166,13 +219,24 @@ const styles = StyleSheet.create({
   // MODAL STYLES FOR ADD LISTING
   input: {
     paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    paddingHorizontal: 4,
+    borderWidth: 0.5,
+    borderColor: 'black',
     borderRadius: 8,
     marginBottom: 10,
-    width: 200,
+    width: 240,
     height: 40,
+  },
+  inputDescription:{
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderWidth: 0.5,
+    borderColor: 'black',
+    borderRadius: 8,
+    marginBottom: 10,
+    width: 240,
+    height: 120,
+    textAlignVertical:'top',
   },
 
   centeredView: {
@@ -183,9 +247,9 @@ const styles = StyleSheet.create({
 
   modalView: {
     margin: 20,
-    backgroundColor: 'grey',
+    backgroundColor: '#cfe7f4ff',
     borderRadius: 20,
-    padding: 35,
+    padding: 25,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {

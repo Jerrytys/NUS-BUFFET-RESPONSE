@@ -4,16 +4,22 @@ import { getAuth , signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
 import { auth } from '../firebaseConfig.js';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen({navigation, onLoginSuccess}) {
 
   function signIn(email, password) {
     signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
+      .then(async (userCredential) => {
         const user = userCredential.user;
         Alert.alert("Signed in Successful");
-        onLoginSuccess() // TO BE  CHANGED
+
+        try {
+          await AsyncStorage.setItem('@user', JSON.stringify(user));
+        } catch (e) {
+          console.error("Failed to save data", e);
+        }
+        onLoginSuccess(user); 
       })
       .catch((error) => {
         Alert.alert("Wrong Email or Password");
