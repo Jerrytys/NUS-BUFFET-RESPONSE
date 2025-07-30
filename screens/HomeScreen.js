@@ -6,6 +6,8 @@ import CardComponent from './Components/CardComponent';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
+import { db } from '../firebaseConfig.js';
+import { collection, addDoc, getDocs, onSnapshot } from 'firebase/firestore';
 
 const data = [
   {label:'School Of Computing', value: '1'},
@@ -51,21 +53,20 @@ export default function HomeScreen() {
     <CardComponent location={item.location}  clearBefore={item.clearBefore} description={item.description} picture = {item.picture}/>
   )
 
+
   const addItem = async () => {
     const newItem = {
       location: location,
       clearBefore: clearBefore,
       description: description,
-      picture: imageUri || null,
+      // picture: imageUri || null,
     };
 
-    const updatedList  = [...dataList, newItem];
-    setDataList(updatedList);
-    // await can only be async function or top level of modules
     try {
-      await AsyncStorage.setItem('@dataList', JSON.stringify(updatedList));
+      await addDoc(collection(db, 'posts'), newItem);
+      console.log('Listing added');
     } catch (e) {
-      console.error("Failed to save data", e);
+      console.error('Failed to added item', e);
     }
 
     resetVariable();
@@ -78,21 +79,48 @@ export default function HomeScreen() {
     setDescription("");
     setImageUri(null);
   }
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const storedData = await AsyncStorage.getItem('@dataList');
-        if (storedData !== null) {
-          setDataList(JSON.parse(storedData));
-        }
-      } catch (e) {
-        console.error("Failed to load data", e);
-      }
-    };
 
+  // Process snapshot of db to catch object conversion (timestamp)
+  const processSnapshot = (snapshot) => {
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        location: data.location,
+        description: data.description,
+        clearBefore: data.clearBefore && data.clearBefore.toDate
+          ? data.clearBefore.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : data.clearBefore || '',
+        // picture: data.picture || null,
+      };
+    });
+  };
+
+  const loadData = async () =>  {
+    try {
+      const snapshot = await getDocs(collection(db, 'posts'));
+      const listings = processSnapshot(snapshot);
+      setDataList(listings);
+    } catch (e) {
+      console.error("Error getting listings:", e);
+    }
+  }    
+
+  useEffect(() => {
     loadData();
+
+    // Real-time Listener
+    const unsubscribe = onSnapshot(collection(db, 'posts'), (snapshot) => {
+      const listings = processSnapshot(snapshot);
+      setDataList(listings);
+    })
+
+    // cleanup listener on unmount
+    return unsubscribe;
   }, []);
-  
+
+
+
   const clearAll = async () => {
     try {
       await AsyncStorage.removeItem('@dataList'); // Clear from storage
@@ -265,12 +293,21 @@ export default function HomeScreen() {
           <Text>Add Listing</Text>
         </Pressable>
         
-        
-        <Pressable 
-          style = { styles.AddButton }
-          onPress={() => clearAll()}>
-          <Text>clear all</Text>
-        </Pressable>
+        <View style={{flexDirection: 'row', gap: 8}}>
+          <Pressable 
+            style = { styles.AddButton }
+            onPress={() => clearAll()}>
+            <Text>clear all</Text>
+          </Pressable>
+
+          <Pressable 
+            style = { styles.AddButton }
+            onPress={() => loadData()}>
+            <Text>refresh</Text>
+          </Pressable>
+
+
+        </View>
 
         <FlatList
           data={dataList}

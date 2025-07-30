@@ -1,24 +1,45 @@
+import React, { useState } from 'react';
+import MapView, {Marker} from 'react-native-maps';
 import { StatusBar } from 'expo-status-bar';
-import { Pressable, Text, View, StyleSheet, Alert } from 'react-native';   
+import { View, StyleSheet,  } from 'react-native';   
+
 
 
 export default function SearchScreen() {
+  const [markers, setMarkers] = useState([]);
+
+  const handleMapPress = (event) => {
+    const { coordinate } = event.nativeEvent;
+    setMarkers([...markers, coordinate]);
+  };
+
   return (
+    
     <View style={styles.container}>
-      <Pressable
-        style = {({ pressed } ) =>[
-          styles.Add_Button,
-          pressed && styles.Add_Button_Pressed
-        ]}
-
-        onPress ={() =>{
-          Alert.alert("Select Faculty")
+      <MapView
+       style ={styles.map}
+       initialRegion={{
+        latitude: 1.296849,
+        longitude: 103.776906,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
         }}
-      >
-        <Text>Search Screen</Text>
-      </Pressable>
-      <Text style={styles.title}>Search</Text>
-
+        userInterfaceStyle = 'dark'
+        showsIndoors = {true}
+        onPress={handleMapPress}
+        >
+          {markers.map((marker, index) => (
+          <Marker
+            key={index}
+            coordinate={marker}
+            title={`Marker ${index + 1}`} // set name of marker to Marker 1,2,3 etc
+            onLongPress={() => {
+            // Remove marker at this index
+            setMarkers(markers.filter((_, i) => i !== index));
+            }}
+          />
+        ))}
+      </MapView>
       <StatusBar style="auto" />
     </View>
   );
@@ -28,30 +49,10 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 
-  title: {
-    fontSize: 28,
-    fontWeight: 700,
-    marginBottom: 20
+  map: {
+    width: '100%',
+    height: '100%',
   },
-  
-  logo: {
-    height: 240,
-    width: 240,
-    marginBottom: 30,
-  },
-
-  Add_Button:{
-    fontSize: 30,
-    marginBottom: 15,
-    color:'#1fcbd7ff',
-  },
-
-  Add_Button_Pressed:{
-    color:'#rgba(34, 244, 220, 1)',
-  }
 });
