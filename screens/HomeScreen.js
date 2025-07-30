@@ -7,7 +7,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { db } from '../firebaseConfig.js';
-import { collection, addDoc, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, getDocs, onSnapshot, deleteDoc } from 'firebase/firestore';
+
 
 const data = [
   {label:'School Of Computing', value: '1'},
@@ -19,7 +20,7 @@ const data = [
   {label:'University Town', value: '7'},
 ];
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation, user }) {
   const [value, setValue] = useState(null);
   const [modalVisible, setModalVisible]  = useState(false);
   const [location, setLocation] =  useState('');
@@ -30,6 +31,20 @@ export default function HomeScreen() {
   const [showPicker, setShowPicker] = useState(false);
   const [dataList, setDataList] = useState([]);
   const [imageUri, setImageUri] = useState(null);
+  
+  const handleConfirm = async() =>{
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if(status !== 'granted'){
+      Alert.alert('Permission denied');
+      return;
+    }
+    const location = await Location.getCurrentPositionAsync();
+    const marker = {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    };
+    navigation.navigate('Search', { markers: [marker] });
+  };
 
   const openCamera = async() => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -50,16 +65,24 @@ export default function HomeScreen() {
   };
 
   const renderItem = ({item}) => (
-    <CardComponent location={item.location}  clearBefore={item.clearBefore} description={item.description} picture = {item.picture}/>
+    <CardComponent location={item.location}  
+                   clearBefore={item.clearBefore} 
+                   description={item.description} 
+                   picture = {item.picture} 
+                   postUser={item.postUser} 
+                   currentUser={user.email}
+                   id = {item.id}
+    />
   )
 
-
   const addItem = async () => {
+    
     const newItem = {
       location: location,
       clearBefore: clearBefore,
       description: description,
-      // picture: imageUri || null,
+      // picture: imageUrl || null,
+      postUser: user.email,
     };
 
     try {
@@ -92,6 +115,7 @@ export default function HomeScreen() {
           ? data.clearBefore.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           : data.clearBefore || '',
         // picture: data.picture || null,
+        postUser: data.postUser,
       };
     });
   };
@@ -119,12 +143,10 @@ export default function HomeScreen() {
     return unsubscribe;
   }, []);
 
-
-
   const clearAll = async () => {
     try {
-      await AsyncStorage.removeItem('@dataList'); // Clear from storage
-      setDataList([]); // Clear from in-memory state
+      const snapshot = await getDocs(collection(db,'posts'));
+      snapshot.docs.map((document) => deleteDoc(document.ref)) // Clear from firestore 
       console.log("Cleared all items");
     } catch (e) {
       console.error("Failed to clear items", e);
@@ -278,7 +300,10 @@ export default function HomeScreen() {
                   style={[styles.button, styles.buttonClose]}
                   onPress={() => {
                     setModalVisible(!modalVisible);
-                    addItem();}}>
+                    addItem();
+                    Alert.alert("Input Successful" ,"Now go to Search and mark buffet location(Your current location)");
+                  }}
+                >
                   <Text style={styles.textStyle}>Confirm</Text>
                 </Pressable>
               </View>

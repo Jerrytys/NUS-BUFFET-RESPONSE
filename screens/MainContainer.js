@@ -40,7 +40,10 @@
                     },
                 })}>
 
-                <Tab.Screen name={homeName} component={HomeScreen}/>
+                <Tab.Screen 
+                    name={homeName} 
+                    children={() => <HomeScreen user={user}/>}
+                />
                 <Tab.Screen name={searchName} component={SearchScreen}/>
                 <Tab.Screen 
                     name={profileName} 
