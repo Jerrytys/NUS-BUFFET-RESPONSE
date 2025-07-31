@@ -3,7 +3,7 @@ import { Image, Text, StyleSheet, View, Pressable, Alert } from 'react-native';
 import { db } from '../../firebaseConfig.js';
 import { deleteDoc, doc } from 'firebase/firestore';
 
-const CardComponent = ({ description, location, clearBefore, picture, postUser, currentUser, id }) => {
+const CardComponent = ({ description, location, clearBefore, picture, postUser, currentUser, id, facultyValue }) => {
 
     // delete post if user is same as create post user with confirmation
     const deletePost = async () => {
@@ -44,8 +44,15 @@ const CardComponent = ({ description, location, clearBefore, picture, postUser, 
                 </View>
 
                 <View>
+                    <Text>{facultyValue}</Text>
                     {currentUser === postUser && (
-                        <Pressable style={ styles.DelButton } onPress={deletePost}>
+                        <Pressable 
+                            onPress={deletePost}
+                            style = {({ pressed }) => [
+                                styles.DelButton,
+                                pressed && styles.DelButtonPressed
+                            ]}
+                        >
                             <Text>Delete</Text>
                         </Pressable>
                     )}
@@ -75,6 +82,7 @@ const styles = StyleSheet.create({
         flex: 1,
         width: 300,
         height: 200,
+        marginBottom: 10,
         borderWidth: 1,
         borderColor: 'black',
     },
@@ -129,7 +137,7 @@ const styles = StyleSheet.create({
         height:110,
         marginLeft: 5,
         borderRadius: 10,
-        borderColor:'blue',
+        borderColor:'black',
         borderWidth:1,
         marginTop: 8,
     },
@@ -137,12 +145,17 @@ const styles = StyleSheet.create({
     DelButton:{
         fontSize: 30,
         marginVertical: 4,
-        backgroundColor:'#cfe7f4ff',
-        padding: 10,
-        borderRadius: 10,
-        borderWidth: 1,
+        marginRight: 5,
+        padding: 5,
+        borderWidth:1,
         borderColor: 'black',
-        paddingHorizontal: 40,
+        borderRadius:10,
+        paddingHorizontal: 8,
+    },
+
+    DelButtonPressed:{
+        backgroundColor: '#cfe7f4ff',
+        borderColor: '#192cd8ff'
     },
 });
 

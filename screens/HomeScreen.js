@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { db } from '../firebaseConfig.js';
-import { collection, addDoc, getDocs, onSnapshot, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, onSnapshot, deleteDoc, query, where } from 'firebase/firestore';
 
 
 const data = [
@@ -21,7 +21,7 @@ const data = [
 ];
 
 export default function HomeScreen({ navigation, user }) {
-  const [value, setValue] = useState(null);
+  const [facultyValue, setFacultyValue] = useState(null);
   const [modalVisible, setModalVisible]  = useState(false);
   const [location, setLocation] =  useState('');
   const [description, setDescription] = useState('');
@@ -72,6 +72,7 @@ export default function HomeScreen({ navigation, user }) {
                    postUser={item.postUser} 
                    currentUser={user.email}
                    id = {item.id}
+                   facultyValue = {item.facultyValue}
     />
   )
 
@@ -83,6 +84,7 @@ export default function HomeScreen({ navigation, user }) {
       description: description,
       // picture: imageUrl || null,
       postUser: user.email,
+      facultyValue: parseInt(facultyValue),
     };
 
     try {
@@ -122,14 +124,27 @@ export default function HomeScreen({ navigation, user }) {
 
   const loadData = async () =>  {
     try {
-      const snapshot = await getDocs(collection(db, 'posts'));
-      const listings = processSnapshot(snapshot);
-      setDataList(listings);
+      // const postRef = await getDocs(collection(db, 'posts'));
+      const postRef = collection(db, 'posts');
+      let q = facultyValue
+              ? query(postRef, where("facultyValue", "==", parseInt(facultyValue)))
+              : postRef
+      // const listings = processSnapshot(snapshot);
+      const filtered = await getDocs(q);
+      const filteredListings = processSnapshot(filtered);
+      setDataList(filteredListings);
     } catch (e) {
       console.error("Error getting listings:", e);
     }
   }    
 
+  // reloads data after changing dropdown faculty
+  useEffect(() => {
+    if (facultyValue !== null) {
+      loadData();
+    }
+  }, [facultyValue]);
+  
   useEffect(() => {
     loadData();
 
@@ -177,6 +192,26 @@ export default function HomeScreen({ navigation, user }) {
     toggleDatePicker();
   }
 
+  // check for required faculty change before able to add listing
+  const addListing = () => {
+    if (facultyValue == null) {
+      Alert.alert("Please select a faculty before posting your listing")
+    } else {
+      setModalVisible(true);
+    }
+  }
+
+  // check for required input before 
+  const confirmListing = ()  => {
+    if (location == "") {
+      Alert.alert("Please input a valid location")
+    } else if (clearBefore  == "") {
+      Alert.alert("Please input a valid time")
+    } else {
+      setModalVisible(!modalVisible);
+      addItem();
+    }
+  }
   return (
     <View style={styles.container}>
 
@@ -188,8 +223,8 @@ export default function HomeScreen({ navigation, user }) {
           labelField="label"
           valueField="value"
           placeholder="Filter Faculty"
-          value={value}
-          onChange={item => setValue(item.value)}
+          value={facultyValue}
+          onChange={item => {setFacultyValue(item.value); loadData()}}
         />
       </View>
       
@@ -277,15 +312,6 @@ export default function HomeScreen({ navigation, user }) {
                 value={description}
                 onChangeText={text => setDescription(text)}
               />
-              <Pressable style={[styles.button, styles.buttonClose]} onPress={openCamera}>
-                <Text>Take Photo</Text>
-              </Pressable>
-              {imageUri && (
-                <Image 
-                  source={{ uri: imageUri }} 
-                  style={{ width: 200, height: 200, marginVertical: 10, borderRadius: 10 }} 
-                />
-              )}
               <View style={styles.horizontalButtons}>
                 <Pressable
                   style={[styles.button, styles.buttonClose]}
@@ -299,9 +325,8 @@ export default function HomeScreen({ navigation, user }) {
                 <Pressable
                   style={[styles.button, styles.buttonClose]}
                   onPress={() => {
-                    setModalVisible(!modalVisible);
-                    addItem();
-                    Alert.alert("Input Successful" ,"Now go to Search and mark buffet location(Your current location)");
+                    confirmListing();
+                    // Alert.alert("Input Successful" ,"Now go to Search and mark buffet location(Your current location)");
                   }}
                 >
                   <Text style={styles.textStyle}>Confirm</Text>
@@ -311,28 +336,34 @@ export default function HomeScreen({ navigation, user }) {
             </View>
           </View>
         </Modal>
-
-        <Pressable 
-          style = { styles.AddButton }
-          onPress={() => setModalVisible(true)}>
-          <Text>Add Listing</Text>
-        </Pressable>
         
-        <View style={{flexDirection: 'row', gap: 8}}>
+        <View style={{flexDirection: 'row', gap: 100}}>
           <Pressable 
-            style = { styles.AddButton }
-            onPress={() => clearAll()}>
-            <Text>clear all</Text>
+            onPress={() => addListing()}
+              style = {({ pressed }) => [
+                styles.AddButton,
+                pressed && styles.buttonPressed
+              ]}
+          >
+            <Text>Add Listing</Text>
           </Pressable>
 
           <Pressable 
-            style = { styles.AddButton }
-            onPress={() => loadData()}>
+            onPress={() => loadData()}
+            style = {({ pressed }) => [
+              styles.AddButton,
+              pressed && styles.buttonPressed
+            ]}
+          >
             <Text>refresh</Text>
           </Pressable>
 
-
         </View>
+        <Pressable 
+            style = { styles.AddButton }
+            onPress={() => clearAll()}>
+            <Text>clear all</Text>
+        </Pressable>
 
         <FlatList
           data={dataList}
@@ -395,13 +426,19 @@ const styles = StyleSheet.create({
 
   AddButton:{
     fontSize: 30,
-    marginVertical: 4,
+    marginTop: 4,
+    marginBottom: 20,
     backgroundColor:'#cfe7f4ff',
     padding: 10,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: 'black',
-    paddingHorizontal: 40,
+    paddingHorizontal: 20,
+    marginLeft: 0,
+  },
+  buttonPressed:{
+    backgroundColor: '#b3d9ee',
+    
   },
 
   // MODAL STYLES FOR ADD LISTING
@@ -476,7 +513,7 @@ const styles = StyleSheet.create({
 
   horizontalButtons: {
     flexDirection: 'row',
-    gap: 20,
+    gap: 100,
   },
   
 });
