@@ -2,6 +2,7 @@ import React from 'react';
 import { Image, Text, StyleSheet, View, Pressable, Alert } from 'react-native';
 import { db } from '../../firebaseConfig.js';
 import { deleteDoc, doc } from 'firebase/firestore';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const CardComponent = ({ description, location, clearBefore, picture, postUser, currentUser, id, facultyValue }) => {
 
@@ -40,11 +41,10 @@ const CardComponent = ({ description, location, clearBefore, picture, postUser, 
             <View  style={{flexDirection:"row", alignItems:'center'}}>
                 <View style={{ flexShrink: 1 }}>
                     <Text style={styles.location}>Location: {location}</Text>
-                    <Text style={styles.clearBefore}>ClearBy: {clearBefore}</Text>
+                    <Text style={styles.clearBefore}>Clear By: {clearBefore}</Text>
                 </View>
 
                 <View>
-                    <Text>{facultyValue}</Text>
                     {currentUser === postUser && (
                         <Pressable 
                             onPress={deletePost}
@@ -53,7 +53,11 @@ const CardComponent = ({ description, location, clearBefore, picture, postUser, 
                                 pressed && styles.DelButtonPressed
                             ]}
                         >
-                            <Text>Delete</Text>
+                            <MaterialCommunityIcons 
+                                name="delete" 
+                                size={24} 
+                                color="black" 
+                            />
                         </Pressable>
                     )}
                 </View>
@@ -85,22 +89,23 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         borderWidth: 1,
         borderColor: 'black',
+        borderRadius: 12,
     },
  
     location: {
         width:285,
         heigt:40,
-        marginLeft: 5,
+        marginLeft: 8,
         marginRight: 10,
-        marginTop: 5,
+        marginTop: 8,
         
     },
     clearBefore: {
         width: 285,
         height: 30,
-        marginLeft: 5,
+        marginLeft: 8,
         marginRight: 10,
-        marginTop:5,
+        marginTop: 8,
         
     },
     
@@ -135,7 +140,7 @@ const styles = StyleSheet.create({
     picture: {
         width:110,
         height:110,
-        marginLeft: 5,
+        marginLeft: 8,
         borderRadius: 10,
         borderColor:'black',
         borderWidth:1,
@@ -145,7 +150,7 @@ const styles = StyleSheet.create({
     DelButton:{
         fontSize: 30,
         marginVertical: 4,
-        marginRight: 5,
+        marginRight: 12,
         padding: 5,
         borderWidth:1,
         borderColor: 'black',

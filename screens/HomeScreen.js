@@ -2,6 +2,8 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect  } from 'react'; 
 import { Platform, FlatList, Text, View, StyleSheet, Alert, Pressable, Modal, TextInput, Image } from 'react-native';   
 import { Dropdown } from 'react-native-element-dropdown';
+import { Entypo } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import CardComponent from './Components/CardComponent';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -119,7 +121,7 @@ export default function HomeScreen({ navigation, user }) {
         // picture: data.picture || null,
         postUser: data.postUser,
       };
-    });
+    }); 
   };
 
   const loadData = async () =>  {
@@ -146,27 +148,22 @@ export default function HomeScreen({ navigation, user }) {
   }, [facultyValue]);
   
   useEffect(() => {
-    loadData();
+    let q = collection(db, 'posts');
+
+    if (facultyValue !== null) {
+      q = query(q, where("facultyValue", "==", parseInt(facultyValue)));
+    }
 
     // Real-time Listener
-    const unsubscribe = onSnapshot(collection(db, 'posts'), (snapshot) => {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const listings = processSnapshot(snapshot);
       setDataList(listings);
     })
 
+
     // cleanup listener on unmount
     return unsubscribe;
-  }, []);
-
-  const clearAll = async () => {
-    try {
-      const snapshot = await getDocs(collection(db,'posts'));
-      snapshot.docs.map((document) => deleteDoc(document.ref)) // Clear from firestore 
-      console.log("Cleared all items");
-    } catch (e) {
-      console.error("Failed to clear items", e);
-    }
-  };
+  }, [facultyValue]);
 
   const toggleDatePicker = () => {
     setShowPicker(!showPicker);
@@ -337,39 +334,36 @@ export default function HomeScreen({ navigation, user }) {
           </View>
         </Modal>
         
-        <View style={{flexDirection: 'row', gap: 100}}>
-          <Pressable 
-            onPress={() => addListing()}
-              style = {({ pressed }) => [
-                styles.AddButton,
-                pressed && styles.buttonPressed
-              ]}
-          >
-            <Text>Add Listing</Text>
-          </Pressable>
 
-          <Pressable 
-            onPress={() => loadData()}
-            style = {({ pressed }) => [
-              styles.AddButton,
-              pressed && styles.buttonPressed
-            ]}
-          >
-            <Text>refresh</Text>
-          </Pressable>
 
-        </View>
-        <Pressable 
-            style = { styles.AddButton }
-            onPress={() => clearAll()}>
-            <Text>clear all</Text>
-        </Pressable>
 
         <FlatList
           data={dataList}
           renderItem={renderItem}
         />
-        
+
+        <View style={{flexDirection: 'row', gap: 150}}>
+          <Pressable 
+            onPress={() => addListing()}
+            style = {({ pressed }) => [
+                styles.AddButton,
+                pressed && styles.buttonPressed
+              ]}
+          >
+            <Entypo name="add-to-list" size={40} color="black" />
+          </Pressable>
+
+          <Pressable 
+            onPress={() => loadData()}
+            style = {({ pressed }) => [
+              styles.RefreshButton,
+              pressed && styles.buttonPressed
+            ]}
+          >
+            <Ionicons name="refresh" size={40} color="black" />
+          </Pressable>
+
+        </View>
       </View>
 
 
@@ -390,19 +384,18 @@ const styles = StyleSheet.create({
   content:{
     flex: 8,
     width: 320,
-    marginTop: 20,
+    marginTop: 5,
     paddingHorizontal: 8,
     paddingVertical: 5,
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor:'black',
-    borderWidth: 1,
+
   },
 
   dropDown:{
     width:300,
     height:50,
-    marginVertical: 20,
+    marginTop: 10,
     borderColor: 'black',
     borderWidth: 1,
     borderRadius: 30,
@@ -424,18 +417,18 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
 
-  AddButton:{
-    fontSize: 30,
-    marginTop: 4,
-    marginBottom: 20,
-    backgroundColor:'#cfe7f4ff',
-    padding: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'black',
-    paddingHorizontal: 20,
-    marginLeft: 0,
+  AddButton: {
+    marginBottom: 5, 
+    paddingVertical: 8,
+    paddingHorizontal: 8,
   },
+  
+  RefreshButton: {
+    marginBottom: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+  },
+  
   buttonPressed:{
     backgroundColor: '#b3d9ee',
     
@@ -452,6 +445,7 @@ const styles = StyleSheet.create({
     width: 240,
     height: 40,
   },
+
   inputDescription:{
     paddingVertical: 8,
     paddingHorizontal: 4,

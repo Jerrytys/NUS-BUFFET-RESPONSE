@@ -13,7 +13,7 @@ export default function ProfileScreen({ user, onLogout }) {
 
             // Reset navigation stack to the login screen
             
-            //onLogout?.() // ?. is optional chaining operator, does not crash if does not exist
+            onLogout?.() // ?. is optional chaining operator, does not crash if does not exist
             Alert.alert('Logged out')
         } catch (error) {
             console.error('Logout error:', error);
