@@ -3,8 +3,10 @@ import { Image, Text, StyleSheet, View, Pressable, Alert } from 'react-native';
 import { db } from '../../firebaseConfig.js';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Entypo from '@expo/vector-icons/Entypo';
+import { useNavigation } from '@react-navigation/native';
 
-const CardComponent = ({ description, location, clearBefore, picture, postUser, currentUser, id, facultyValue }) => {
+const CardComponent = ({ description, location, clearBefore, postUser, currentUser, id, facultyValue,  marker }) => {
 
     // delete post if user is same as create post user with confirmation
     const deletePost = async () => {
@@ -35,6 +37,12 @@ const CardComponent = ({ description, location, clearBefore, picture, postUser, 
         )
 
     }
+    
+    const navigation = useNavigation();
+
+    const moveToLocation = () => {
+        navigation.navigate('Search', { marker });
+    };
 
     return (
         <View style={styles.card}>
@@ -42,6 +50,20 @@ const CardComponent = ({ description, location, clearBefore, picture, postUser, 
                 <View style={{ flexShrink: 1 }}>
                     <Text style={styles.location}>Location: {location}</Text>
                     <Text style={styles.clearBefore}>Clear By: {clearBefore}</Text>
+                </View>
+
+                <View>
+
+                    <Pressable 
+                        onPress={moveToLocation}
+                        style = {({ pressed }) => [
+                            styles.DelButton,
+                            pressed && styles.DelButtonPressed
+                        ]}
+                    >
+                        <Entypo name="location" size={24} color="black" />
+                    </Pressable>
+
                 </View>
 
                 <View>
@@ -66,12 +88,8 @@ const CardComponent = ({ description, location, clearBefore, picture, postUser, 
 
         <View style={styles.separator}/>
         <View style ={styles.row}>
-            <Image
-                style={styles.picture}
-                source={{ uri: picture }} 
-            />
             <View style ={styles.descriptionComponent}>
-                <Text style={styles.header}>Description:</Text>
+                <Text style={styles.header}>Description: </Text>
                 <Text style={styles.description}>{description}</Text>
             </View>
         </View>

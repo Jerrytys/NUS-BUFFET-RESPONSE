@@ -3,6 +3,7 @@
     import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
     import { NavigationContainer } from '@react-navigation/native';
     import Ionicons from 'react-native-vector-icons/Ionicons';
+    
 
     // Screens
     import HomeScreen from './HomeScreen.js';
@@ -19,7 +20,7 @@
     const Tab = createBottomTabNavigator();
 
     export default function MainContainer({ user, onLogout}) {
-        return (
+        return (        
             <Tab.Navigator
                 initialRouteName={homeName}
                 screenOptions={({route}) => ({

@@ -1,15 +1,15 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect  } from 'react'; 
-import { Platform, FlatList, Text, View, StyleSheet, Alert, Pressable, Modal, TextInput, Image } from 'react-native';   
+import { Platform, FlatList, Text, View, StyleSheet, Alert, Pressable, Modal, TextInput } from 'react-native';   
 import { Dropdown } from 'react-native-element-dropdown';
 import { Entypo } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import CardComponent from './Components/CardComponent';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import * as ImagePicker from 'expo-image-picker';
-import { db } from '../firebaseConfig.js';
-import { collection, addDoc, getDocs, onSnapshot, deleteDoc, query, where } from 'firebase/firestore';
+import { db } from '../firebaseConfig.js';  
+import { collection, addDoc, getDocs, onSnapshot, deleteDoc, query, where, GeoPoint } from 'firebase/firestore';
+import * as Location from 'expo-location';
 
 
 const data = [
@@ -28,67 +28,68 @@ export default function HomeScreen({ navigation, user }) {
   const [location, setLocation] =  useState('');
   const [description, setDescription] = useState('');
   const [clearBefore, setClearBefore] = useState('');
+  const [marker, setMarker] = useState({
+    latitude: 0.0,
+    longitude: 0.0,
+  });
   const [date, setDate] = useState(new Date());
   const [hasTime, setHasTime] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [dataList, setDataList] = useState([]);
-  const [imageUri, setImageUri] = useState(null);
   
-  const handleConfirm = async() =>{
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if(status !== 'granted'){
-      Alert.alert('Permission denied');
-      return;
-    }
-    const location = await Location.getCurrentPositionAsync();
-    const marker = {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-    };
-    navigation.navigate('Search', { markers: [marker] });
-  };
+  // const handleAddMarker = async() =>{
+  //   const { status } = await Location.requestForegroundPermissionsAsync();
+  //   if(status !== 'granted'){
+  //     Alert.alert('Permission denied');
+  //     return;
+  //   }
+    
+  //   const currentlocation = await Location.getCurrentPositionAsync();
 
-  const openCamera = async() => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if(status !== 'granted'){
-      Alert.alert('Permission denied', 'Camera permission is required');
-      return;
-    }
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      quality: 0.5,
-    });
+  //   const newMarker = {
+  //     latitude: currentlocation.coords.latitude,
+  //     longitude: currentlocation.coords.longitude,
+  //     //afterwards store these values in the card
 
-    if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      console.log("Captured Image URI:", uri);
-      setImageUri(uri); // Optional: store or display the photo
-    }
-  };
+  //   };
+  //   setMarker(newMarker);
+  // };
+
+ 
 
   const renderItem = ({item}) => (
     <CardComponent location={item.location}  
                    clearBefore={item.clearBefore} 
                    description={item.description} 
-                   picture = {item.picture} 
                    postUser={item.postUser} 
                    currentUser={user.email}
                    id = {item.id}
                    facultyValue = {item.facultyValue}
+                   marker = {item.marker}
     />
   )
 
   const addItem = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if(status !== 'granted'){
+      Alert.alert('Permission denied');
+      return;
+    }
     
+    const currentlocation = await Location.getCurrentPositionAsync();
+
+    const marker = new GeoPoint(currentlocation.coords.latitude,  currentlocation.coords.longitude);
+
     const newItem = {
       location: location,
       clearBefore: clearBefore,
       description: description,
-      // picture: imageUrl || null,
       postUser: user.email,
       facultyValue: parseInt(facultyValue),
+      marker: marker,
     };
 
+    console.log('Adding newItem:', newItem);
     try {
       await addDoc(collection(db, 'posts'), newItem);
       console.log('Listing added');
@@ -104,7 +105,6 @@ export default function HomeScreen({ navigation, user }) {
     setClearBefore(new Date());
     setHasTime(false);
     setDescription("");
-    setImageUri(null);
   }
 
   // Process snapshot of db to catch object conversion (timestamp)
@@ -120,6 +120,8 @@ export default function HomeScreen({ navigation, user }) {
           : data.clearBefore || '',
         // picture: data.picture || null,
         postUser: data.postUser,
+        facultyValue:  data.facultyValue,
+        marker: data.marker,
       };
     }); 
   };
